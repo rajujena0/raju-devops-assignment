@@ -1,0 +1,76 @@
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["Build & Deploy to Staging"]
+    types: [completed]
+    branches: [main]
+
+env:
+  AWS_REGION: ap-south-2
+  ECR_REPOSITORY: raju-portfolio
+
+jobs:
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production        
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get latest image from ECR
+        id: get-image
+        run: |
+          IMAGE_URI=$(aws ecr describe-images \
+            --repository-name $ECR_REPOSITORY \
+            --region $AWS_REGION \
+            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' \
+            --output text)
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_URI" >> $GITHUB_OUTPUT
+          echo "Deploying image: $IMAGE_URI"
+
+      - name: Deploy to Production EC2 via SSM
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=devops-assignment-app-server" \
+                      "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text --region $AWS_REGION)
+
+          echo "Production deploy to: $INSTANCE_ID"
+
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands=["
+              aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com,
+              docker pull ${{ steps.get-image.outputs.image-uri }},
+              docker stop portfolio-app || true,
+              docker rm portfolio-app || true,
+              docker run -d --name portfolio-app -p 8080:8080 --restart unless-stopped ${{ steps.get-image.outputs.image-uri }},
+              echo 'Production deployment complete'
+            "] \
+            --region $AWS_REGION
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "PRODUCTION deployment failed!"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "Check logs immediately!"
