@@ -1,7 +1,37 @@
 const express = require('express');
 const path = require('path');
+const client = require('prom-client');
+
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.1, 0.3, 0.5, 1, 1.5, 2, 5],
+  registers: [register]
+});
+
+const httpRequestTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
+});
+
+app.use((req, res, next) => {
+  const end = httpRequestDuration.startTimer();
+  res.on('finish', () => {
+    const labels = { method: req.method, route: req.path, status_code: res.statusCode };
+    end(labels);
+    httpRequestTotal.inc(labels);
+  });
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -62,6 +92,11 @@ const profile = {
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 app.get('/api/profile', (req, res) => {
