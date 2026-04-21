@@ -10,3 +10,5 @@ terraform/terraform.tfstate.backup
 
 # OS
 .DS_Store
+app/node_modules/
+app/coverage/
