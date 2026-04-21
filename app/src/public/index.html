@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raju Jena — Cloud DevOps & SRE</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#0f1117;--bg2:#181c27;--bg3:#1e2433;--border:rgba(255,255,255,0.08);--text:#f0f2f5;--muted:#8892a4;--accent:#4f8ef7;--accent2:#1dbe8f;--badge-bg:rgba(79,142,247,0.12);--badge-text:#7eb3ff}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;line-height:1.6}
+  a{color:var(--accent);text-decoration:none}
+  nav{position:sticky;top:0;z-index:100;background:rgba(15,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px}
+  .nav-logo{font-weight:700;font-size:1rem}.nav-logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:1.5rem}.nav-links a{font-size:0.85rem;color:var(--muted);transition:color 0.2s}.nav-links a:hover{color:var(--text)}
+  .nav-status{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--accent2)}
+  .status-dot{width:7px;height:7px;background:var(--accent2);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .hero{max-width:860px;margin:0 auto;padding:5rem 2rem 3rem}
+  .hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--badge-bg);border:1px solid rgba(79,142,247,0.2);border-radius:100px;padding:4px 14px;font-size:0.78rem;color:var(--badge-text);margin-bottom:1.5rem}
+  .hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:0.75rem}
+  .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero-sub{font-size:1rem;color:var(--muted);max-width:580px;margin-bottom:2rem}
+  .hero-links{display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:3rem}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:0.85rem;font-weight:500;transition:all 0.2s;cursor:pointer;border:none}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#6ba3ff}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-ghost:hover{border-color:rgba(255,255,255,0.25);background:var(--bg2)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:4rem}
+  .stat{background:var(--bg2);padding:1.25rem;text-align:center}
+  .stat-value{font-size:1.8rem;font-weight:800;letter-spacing:-1px;color:var(--accent)}
+  .stat-label{font-size:0.75rem;color:var(--muted);margin-top:2px}
+  .section{max-width:860px;margin:0 auto;padding:0 2rem 4rem}
+  .section-title{font-size:0.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .exp-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem;transition:border-color 0.2s}
+  .exp-card:hover{border-color:rgba(79,142,247,0.3)}
+  .exp-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem}
+  .exp-role{font-size:1rem;font-weight:600}.exp-company{font-size:0.85rem;color:var(--accent);margin-top:2px}
+  .exp-period{font-size:0.75rem;color:var(--muted);background:var(--bg3);padding:3px 10px;border-radius:100px;white-space:nowrap}
+  .exp-list{list-style:none}.exp-list li{font-size:0.875rem;color:var(--muted);padding:5px 0;display:flex;gap:8px}
+  .exp-list li::before{content:'▸';color:var(--accent2);flex-shrink:0;margin-top:1px}
+  .skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+  .skill-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem}
+  .skill-cat{font-size:0.75rem;font-weight:600;color:var(--accent2);margin-bottom:0.75rem}
+  .skill-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:0.72rem;background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:6px}
+  .projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+  .proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;transition:all 0.2s}
+  .proj-card:hover{border-color:rgba(79,142,247,0.35);transform:translateY(-2px)}
+  .proj-name{font-size:0.95rem;font-weight:600;margin-bottom:0.5rem}
+  .proj-desc{font-size:0.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.5}
+  .proj-tech{display:flex;flex-wrap:wrap;gap:6px}
+  .tech-badge{font-size:0.7rem;background:var(--badge-bg);color:var(--badge-text);border:1px solid rgba(79,142,247,0.2);padding:2px 8px;border-radius:100px}
+  .cert-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+  .cert-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:12px}
+  .cert-icon{width:36px;height:36px;border-radius:8px;background:rgba(247,147,79,0.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+  .cert-name{font-size:0.85rem;font-weight:500}
+  footer{border-top:1px solid var(--border);text-align:center;padding:2rem;font-size:0.78rem;color:var(--muted)}
+  #api-status{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:0.75rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">raju<span>.</span>dev</div>
+  <div class="nav-links">
+    <a href="#experience">Experience</a>
+    <a href="#skills">Skills</a>
+    <a href="#projects">Projects</a>
+    <a href="#certifications">Certifications</a>
+  </div>
+  <div class="nav-status"><div class="status-dot"></div>Open to opportunities</div>
+</nav>
+<div class="hero">
+  <div class="hero-tag">☁️ Cloud DevOps & SRE</div>
+  <h1>Hi, I'm <span>Raju Jena</span></h1>
+  <p class="hero-sub" id="hero-sub">Results-driven Cloud DevOps / SRE with 2+ years building mission-critical AWS infrastructure at scale.</p>
+  <div class="hero-links">
+    <a class="btn btn-primary" href="mailto:jenaraju13@gmail.com">✉ Contact Me</a>
+    <a class="btn btn-ghost" href="https://linkedin.com" target="_blank">🔗 LinkedIn</a>
+  </div>
+  <div class="stats" id="stats-grid"></div>
+</div>
+<div class="section" id="experience">
+  <div class="section-title">Experience</div>
+  <div id="exp-list"></div>
+</div>
+<div class="section" id="skills">
+  <div class="section-title">Skills</div>
+  <div class="skills-grid" id="skills-grid"></div>
+</div>
+<div class="section" id="projects">
+  <div class="section-title">Key Projects</div>
+  <div class="projects-grid" id="projects-grid"></div>
+</div>
+<div class="section" id="certifications">
+  <div class="section-title">Certifications & Education</div>
+  <div class="cert-grid" id="cert-grid"></div>
+</div>
+<footer>Built with Node.js · Deployed via GitHub Actions · Infrastructure by Terraform on AWS</footer>
+<div id="api-status">⚡ Loading...</div>
+<script>
+async function load(){
+  try{
+    const p=await(await fetch('/api/profile')).json();
+    document.getElementById('stats-grid').innerHTML=p.stats.map(s=>`<div class="stat"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div>`).join('');
+    document.getElementById('exp-list').innerHTML=p.experience.map(e=>`<div class="exp-card"><div class="exp-header"><div><div class="exp-role">${e.role}</div><div class="exp-company">${e.company} · ${e.location}</div></div><div class="exp-period">${e.period}</div></div><ul class="exp-list">${e.highlights.map(h=>`<li>${h}</li>`).join('')}</ul></div>`).join('');
+    document.getElementById('skills-grid').innerHTML=Object.entries(p.skills).map(([c,i])=>`<div class="skill-card"><div class="skill-cat">${c}</div><div class="skill-tags">${i.map(x=>`<span class="tag">${x}</span>`).join('')}</div></div>`).join('');
+    document.getElementById('projects-grid').innerHTML=p.projects.map(pr=>`<div class="proj-card"><div class="proj-name">${pr.name}</div><div class="proj-desc">${pr.description}</div><div class="proj-tech">${pr.tech.map(t=>`<span class="tech-badge">${t}</span>`).join('')}</div></div>`).join('');
+    document.getElementById('cert-grid').innerHTML=p.certifications.map(c=>`<div class="cert-card"><div class="cert-icon">🏅</div><div class="cert-name">${c}</div></div>`).join('')+`<div class="cert-card"><div class="cert-icon">🎓</div><div><div class="cert-name">${p.education.degree}</div><div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${p.education.institution} · GPA ${p.education.gpa}</div></div></div>`;
+    document.getElementById('api-status').innerHTML='✅ Live from /api/profile';
+  }catch(e){document.getElementById('api-status').innerHTML='❌ API error';}
+}
+load();
+</script>
+</body>
+</html>
