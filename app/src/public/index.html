@@ -106,7 +106,7 @@ async function load(){
     document.getElementById('skills-grid').innerHTML=Object.entries(p.skills).map(([c,i])=>`<div class="skill-card"><div class="skill-cat">${c}</div><div class="skill-tags">${i.map(x=>`<span class="tag">${x}</span>`).join('')}</div></div>`).join('');
     document.getElementById('projects-grid').innerHTML=p.projects.map(pr=>`<div class="proj-card"><div class="proj-name">${pr.name}</div><div class="proj-desc">${pr.description}</div><div class="proj-tech">${pr.tech.map(t=>`<span class="tech-badge">${t}</span>`).join('')}</div></div>`).join('');
     document.getElementById('cert-grid').innerHTML=p.certifications.map(c=>`<div class="cert-card"><div class="cert-icon">🏅</div><div class="cert-name">${c}</div></div>`).join('')+`<div class="cert-card"><div class="cert-icon">🎓</div><div><div class="cert-name">${p.education.degree}</div><div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${p.education.institution} · GPA ${p.education.gpa}</div></div></div>`;
-    document.getElementById('api-status').innerHTML='✅ Live from /api/profile';
+    document.getElementById('api-status').innerHTML='Live by Raju';
   }catch(e){document.getElementById('api-status').innerHTML='❌ API error';}
 }
 load();
