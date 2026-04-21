@@ -1,0 +1,12 @@
+# Local variable files with secrets
+terraform/*.tfvars.local
+terraform/*.tfvars
+
+# Terraform files
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+
+# OS
+.DS_Store

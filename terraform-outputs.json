@@ -1,0 +1,60 @@
+{
+  "alb_dns_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "devops-assignment-alb-371885925.ap-south-2.elb.amazonaws.com"
+  },
+  "ec2_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-0723dcc3c76fa55f3"
+  },
+  "ec2_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.3.37"
+  },
+  "private_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-02233bc89b224423f",
+      "subnet-0c93c08c24eb9e3d7"
+    ]
+  },
+  "public_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-0cebb6df16024e44c",
+      "subnet-0c95b4b88901c6014"
+    ]
+  },
+  "rds_db_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "appdb"
+  },
+  "rds_endpoint": {
+    "sensitive": true,
+    "type": "string",
+    "value": "devops-assignment-db.clm8acwky3ug.ap-south-2.rds.amazonaws.com:5432"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-00ebc2d0cb70a3ac1"
+  }
+}
