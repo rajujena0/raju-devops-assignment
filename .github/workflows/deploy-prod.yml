@@ -14,7 +14,7 @@ jobs:
   deploy-prod:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    environment: production       
+    environment: production
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
@@ -35,14 +35,13 @@ jobs:
       - name: Get latest image from ECR
         id: get-image
         run: |
-          IMAGE_URI=$(aws ecr describe-images \
+          IMAGE_TAG=$(aws ecr describe-images \
             --repository-name $ECR_REPOSITORY \
             --region $AWS_REGION \
-            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' \
+            --query 'sort_by(imageDetails,&imagePushedAt)[-1].imageTags[0]' \
             --output text)
-          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-          echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "Deploying image: $IMAGE_URI"
+          echo "image-uri=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "Deploying image tag: $IMAGE_TAG"
 
       - name: Deploy to Production EC2 via SSM
         run: |
@@ -52,25 +51,18 @@ jobs:
             --query "Reservations[0].Instances[0].InstanceId" \
             --output text --region $AWS_REGION)
 
-          echo "Production deploy to: $INSTANCE_ID"
+          IMAGE_URI="${{ steps.get-image.outputs.image-uri }}"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands=["
-              aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com,
-              docker pull ${{ steps.get-image.outputs.image-uri }},
-              docker stop portfolio-app || true,
-              docker rm portfolio-app || true,
-              docker run -d --name portfolio-app -p 8080:8080 --restart unless-stopped ${{ steps.get-image.outputs.image-uri }},
-              echo 'Production deployment complete'
-            "] \
+            --parameters "{\"commands\":[\"aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}\",\"docker pull ${IMAGE_URI}\",\"docker stop portfolio-app || true\",\"docker rm portfolio-app || true\",\"docker run -d --name portfolio-app -p 8080:8080 --restart unless-stopped ${IMAGE_URI}\",\"echo deployment complete\"]}" \
             --region $AWS_REGION
+          echo "Production deployment triggered for $INSTANCE_ID"
 
       - name: Notify on failure
         if: failure()
         run: |
-          echo "PRODUCTION deployment failed!"
-          echo "Commit: ${{ github.sha }}"
-          echo "Author: ${{ github.actor }}"
-          echo "Check logs immediately!"
+          echo "PRODUCTION deployment failed for commit ${{ github.sha }} by ${{ github.actor }}"
