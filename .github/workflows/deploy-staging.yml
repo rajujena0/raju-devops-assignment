@@ -32,6 +32,10 @@ jobs:
         working-directory: app
         run: node node_modules/jest/bin/jest.js --coverage --forceExit
 
+      - name: Scan dependencies
+        working-directory: app
+        run: npm audit --audit-level=high || true
+
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
@@ -54,7 +58,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Create ECR repository if not exists
+      - name: Create ECR repo if not exists
         run: |
           aws ecr describe-repositories --repository-names $ECR_REPOSITORY \
             --region $AWS_REGION 2>/dev/null || \
@@ -70,9 +74,8 @@ jobs:
           docker build -t $IMAGE_URI ./app
           docker push $IMAGE_URI
           echo "image-uri=$IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "Built and pushed: $IMAGE_URI"
 
-      - name: Scan image for vulnerabilities (Trivy)
+      - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.build.outputs.image-uri }}
@@ -102,50 +105,29 @@ jobs:
             --query "Reservations[0].Instances[0].InstanceId" \
             --output text --region $AWS_REGION)
 
-          echo "Deploying to instance: $INSTANCE_ID"
+          IMAGE_URI="${{ needs.build-and-push.outputs.image-uri }}"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          echo "Deploying $IMAGE_URI to $INSTANCE_ID"
 
           aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands=["
-              aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com,
-              docker pull ${{ needs.build-and-push.outputs.image-uri }},
-              docker stop portfolio-app || true,
-              docker rm portfolio-app || true,
-              docker run -d --name portfolio-app -p 8080:8080 --restart unless-stopped ${{ needs.build-and-push.outputs.image-uri }}
-            "] \
+            --parameters "{\"commands\":[\"aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_URI}\",\"docker pull ${IMAGE_URI}\",\"docker stop portfolio-app || true\",\"docker rm portfolio-app || true\",\"docker run -d --name portfolio-app -p 8080:8080 --restart unless-stopped ${IMAGE_URI}\",\"echo deployment complete\"]}" \
             --region $AWS_REGION
-          echo "Deployment triggered successfully"
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "Staging deployment failed for commit ${{ github.sha }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Author: ${{ github.actor }}"
+          echo "Staging deployment triggered successfully"
 
   notify-failure:
-    name: Notify Slack on Failure
+    name: Notify on Failure
     runs-on: ubuntu-latest
     needs: [test, build-and-push, deploy-staging]
     if: failure()
     steps:
-      - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "❌ *Deployment Failed*",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "❌ *Staging deployment failed*\n*Repo:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      - name: Log failure details
+        run: |
+          echo "Deployment failed!"
+          echo "Repo: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
